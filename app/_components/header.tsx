@@ -25,7 +25,10 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-4">
           {session ? ( //ログイン中の場合
             <>
-              <Link href="/admin" className="text-white no-underline font-bold">
+              <Link
+                href="/admin/posts"
+                className="text-white no-underline font-bold"
+              >
                 管理画面
               </Link>
               <button onClick={handleLogout}>ログアウト</button>
