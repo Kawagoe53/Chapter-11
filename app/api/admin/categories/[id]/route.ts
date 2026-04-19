@@ -1,9 +1,6 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  UpdateCategoryRequestBody,
-  CategoryShowResponse,
-} from "@/app/_types/Posts";
+import { CategoryShowResponse, CategoryRequestBody } from "@/app/_types/Posts";
 
 export const GET = async (
   _request: NextRequest,
@@ -42,7 +39,7 @@ export const PUT = async (
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
-  const { name }: UpdateCategoryRequestBody = await request.json();
+  const { name }: CategoryRequestBody = await request.json();
 
   try {
     await prisma.category.update({

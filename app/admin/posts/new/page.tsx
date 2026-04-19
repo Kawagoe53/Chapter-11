@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { CategoriesIndexResponse, PostRequestBody } from "@/app/_types/Posts";
 import { useRouter } from "next/navigation";
 import { PostForm } from "../_components/Postform";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function CreateNewPost() {
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +21,18 @@ export default function CreateNewPost() {
   const [categories, setCategories] = useState<
     CategoriesIndexResponse["categories"]
   >([]);
+  const { token } = useSupabaseSession();
 
   useEffect(() => {
     const getCategories = async () => {
+      if (!token) return;
       try {
-        const res = await fetch("/api/admin/categories");
+        const res = await fetch("/api/admin/categories", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 👈 Header に token を付与
+          },
+        });
         if (!res.ok) {
           setError("取得に失敗しました");
           return;
@@ -37,14 +45,16 @@ export default function CreateNewPost() {
       }
     };
     getCategories();
-  }, []);
+  }, [token]);
 
   const onSubmit = async (data: PostRequestBody) => {
+    console.log(data);
     try {
+      if (!token) return;
       const requestBody: PostRequestBody = {
         title: data.title,
         content: data.content,
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailImageKey: data.thumbnailImageKey,
         categories: data.categories,
       };
       //asyncの中でtry-catchする
@@ -52,6 +62,7 @@ export default function CreateNewPost() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
         },
         body: JSON.stringify(requestBody),
       });
@@ -78,7 +89,7 @@ export default function CreateNewPost() {
         defaultValues={{
           title: "",
           content: "",
-          thumbnailUrl: "",
+          thumbnailImageKey: "",
           categories: [],
         }}
         categories={categories}

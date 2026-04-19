@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CategoriesIndexResponse } from "@/app/_types/Posts";
 import Link from "next/link";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function AdminPosts() {
   const [adminCategories, setAdminCategories] = useState<
@@ -10,10 +11,12 @@ export default function AdminPosts() {
   >([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { token } = useSupabaseSession();
 
   useEffect(() => {
     const fetcher = async () => {
       try {
+        if (!token) return;
         const res = await fetch("/api/admin/categories");
         if (!res.ok) {
           setError("取得に失敗しました");
@@ -29,7 +32,7 @@ export default function AdminPosts() {
       }
     };
     fetcher();
-  }, []);
+  }, [token]);
 
   if (isLoading) {
     return (

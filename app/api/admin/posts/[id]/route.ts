@@ -1,6 +1,6 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { PostShowResponse, UpdatePostRequestBody } from "@/app/_types/Posts";
+import { PostShowResponse, PostRequestBody } from "@/app/_types/Posts";
 
 export type Category = {
   //将来的に管理者向けだけ変更するかもだから。。。？
@@ -58,7 +58,7 @@ export const PUT = async (
   const { id } = await params;
 
   // リクエストのbodyを取得
-  const { title, content, categories, thumbnailUrl }: UpdatePostRequestBody =
+  const { title, content, categories, thumbnailImageKey }: PostRequestBody =
     await request.json();
 
   try {
@@ -70,7 +70,7 @@ export const PUT = async (
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     });
 

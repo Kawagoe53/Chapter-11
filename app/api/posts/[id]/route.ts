@@ -1,23 +1,6 @@
 import { prisma } from "@/app/_libs/prisma";
+import { PostShowResponse } from "@/app/_types/Posts";
 import { NextRequest, NextResponse } from "next/server";
-
-export type PostShowResponse = {
-  //showが一件取得と言う意味
-  post: {
-    id: number;
-    title: string;
-    content: string;
-    thumbnailUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    postCategories: {
-      category: {
-        id: number;
-        name: string;
-      };
-    }[];
-  };
-};
 
 export const GET = async (
   _request: NextRequest,

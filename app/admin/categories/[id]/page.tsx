@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Form } from "../_components/Form";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function FixAdminCategory() {
   const { id } = useParams();
@@ -20,11 +21,18 @@ export default function FixAdminCategory() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const [data, setData] = useState<CategoryRequestBody | null>(null);
+  const { token } = useSupabaseSession();
 
   useEffect(() => {
     const fetcher = async () => {
+      if (!token) return;
       try {
-        const res = await fetch(`/api/admin/categories/${id}`);
+        const res = await fetch(`/api/admin/categories/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 👈 Header に token を付与
+          },
+        });
         if (!res.ok) {
           setError("取得に失敗しました");
           return;
@@ -40,9 +48,10 @@ export default function FixAdminCategory() {
     };
 
     fetcher();
-  }, [id]);
+  }, [id, token]);
 
   const updateHandleSubmit = async (data: CategoryRequestBody) => {
+    if (!token) return;
     try {
       const requestBody: CategoryRequestBody = {
         name: data.name,
@@ -51,6 +60,7 @@ export default function FixAdminCategory() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
         },
 
         body: JSON.stringify(requestBody),
@@ -68,9 +78,14 @@ export default function FixAdminCategory() {
   };
 
   const deleteHandleSubmit = async () => {
+    if (!token) return;
     try {
       const res = await fetch(`/api/admin/categories/${id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
       });
       if (!res.ok) {
         setError("削除失敗しました");

@@ -2,7 +2,7 @@ import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import {
   CategoriesIndexResponse,
-  CreateCategoryRequestBody,
+  CategoryRequestBody,
 } from "@/app/_types/Posts";
 
 export const GET = async () => {
@@ -31,7 +31,7 @@ export type CreateCategoryResponse = {
 
 export const POST = async (request: NextRequest) => {
   try {
-    const body: CreateCategoryRequestBody = await request.json();
+    const body: CategoryRequestBody = await request.json();
     const { name } = body;
     const data = await prisma.category.create({
       data: {
