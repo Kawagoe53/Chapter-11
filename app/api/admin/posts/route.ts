@@ -12,7 +12,7 @@ export const GET = async (request: NextRequest) => {
 
   // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
   if (error)
-    return NextResponse.json({ status: error.message }, { status: 400 });
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     const posts = await prisma.post.findMany({
       include: {
@@ -50,6 +50,15 @@ export type CreatePostResponse = {
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
 export const POST = async (request: Request) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     // リクエストのbodyを取得
     const body: PostRequestBody = await request.json();
@@ -67,15 +76,15 @@ export const POST = async (request: Request) => {
     });
 
     // 記事とカテゴリーの中間テーブルのレコードをDBに生成
-    // 本来複数同時生成には、createManyというメソッドがあるが、sqliteではcreateManyが使えないので、for文1つずつ実施
-    for (const category of categories) {
-      await prisma.postCategory.create({
-        data: {
-          categoryId: category.id,
-          postId: data.id,
-        },
-      });
-    }
+    // 複数同時生成には、createManyというメソッド
+    //categoryは配列なのでmapを使う
+
+    await prisma.postCategory.createMany({
+      data: categories.map((category) => ({
+        categoryId: category.id,
+        postId: data.id,
+      })),
+    });
 
     // レスポンスを返す
     return NextResponse.json<CreatePostResponse>({

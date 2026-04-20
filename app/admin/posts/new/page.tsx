@@ -48,7 +48,6 @@ export default function CreateNewPost() {
   }, [token]);
 
   const onSubmit = async (data: PostRequestBody) => {
-    console.log(data);
     try {
       if (!token) return;
       const requestBody: PostRequestBody = {

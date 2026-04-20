@@ -4,8 +4,18 @@ import {
   CategoriesIndexResponse,
   CategoryRequestBody,
 } from "@/app/_types/Posts";
+import { supabase } from "@/app/_libs/supabase";
 
-export const GET = async () => {
+export const GET = async (request: NextRequest) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     const categories = await prisma.category.findMany({
       orderBy: {
@@ -30,6 +40,15 @@ export type CreateCategoryResponse = {
 };
 
 export const POST = async (request: NextRequest) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     const body: CategoryRequestBody = await request.json();
     const { name } = body;

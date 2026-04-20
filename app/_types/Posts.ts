@@ -70,3 +70,8 @@ export type CategoryShowResponse = {
     updatedAt: Date;
   };
 };
+
+export type LoginForm = {
+  email: string;
+  password: string;
+};
