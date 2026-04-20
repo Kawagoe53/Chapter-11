@@ -20,7 +20,7 @@ export default function Page() {
       password: data.password,
       options: {
         //supabaseのsignUpに任意で渡せる追加設定（リダイレクト先やユーザー情報など）
-        emailRedirectTo: process.env.NEXT_PUBLIC_SUPABASE_REDIRECT_TO, //メールで認証ボタン押すとログイン画面に遷移
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/login`, //メールで認証ボタン押すとログイン画面に遷移
       },
     });
     if (error) {
