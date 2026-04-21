@@ -1,6 +1,7 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { PostShowResponse, UpdatePostRequestBody } from "@/app/_types/Posts";
+import { PostShowResponse, PostRequestBody } from "@/app/_types/Posts";
+import { supabase } from "@/app/_libs/supabase";
 
 export type Category = {
   //将来的に管理者向けだけ変更するかもだから。。。？
@@ -9,10 +10,19 @@ export type Category = {
 };
 
 export const GET = async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
 
   try {
     const post = await prisma.post.findUnique({
@@ -54,11 +64,19 @@ export const PUT = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }, // ここでリクエストパラメータを受け取る
 ) => {
-  // paramsの中にidが入っているので、それを取り出す
   const { id } = await params;
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
 
   // リクエストのbodyを取得
-  const { title, content, categories, thumbnailUrl }: UpdatePostRequestBody =
+  const { title, content, categories, thumbnailImageKey }: PostRequestBody =
     await request.json();
 
   try {
@@ -70,7 +88,7 @@ export const PUT = async (
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     });
 
@@ -104,12 +122,20 @@ export const PUT = async (
 
 // DELETEという命名にすることで、DELETEリクエストの時にこの関数が呼ばれる
 export const DELETE = async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }, // ここでリクエストパラメータを受け取る
 ) => {
-  // paramsの中にidが入っているので、それを取り出す
   const { id } = await params;
 
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     // idを指定して、Postを削除
     await prisma.post.delete({

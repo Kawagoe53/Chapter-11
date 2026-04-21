@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PostForm } from "../_components/Postform";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function FixAdminPost() {
   const { id } = useParams();
@@ -29,11 +30,18 @@ export default function FixAdminPost() {
   const [categories, setCategories] = useState<
     CategoriesIndexResponse["categories"]
   >([]);
+  const { token } = useSupabaseSession();
 
   useEffect(() => {
     const fetcher = async () => {
+      if (!token) return;
       try {
-        const res = await fetch(`/api/admin/posts/${id}`);
+        const res = await fetch(`/api/admin/posts/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 👈 Header に token を付与
+          },
+        });
         if (!res.ok) {
           setError("取得に失敗しました");
           return;
@@ -41,7 +49,7 @@ export default function FixAdminPost() {
         const data: PostShowResponse = await res.json(); //これはAPIから受け取るデータの型
         setData({
           title: data.post.title,
-          thumbnailUrl: data.post.thumbnailUrl,
+          thumbnailImageKey: data.post.thumbnailImageKey,
           content: data.post.content,
           categories: data.post.postCategories.map((pc) => ({
             id: pc.category.id,
@@ -56,12 +64,18 @@ export default function FixAdminPost() {
     };
 
     fetcher();
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
     const getCategories = async () => {
       try {
-        const res = await fetch("/api/admin/categories");
+        if (!token) return;
+        const res = await fetch("/api/admin/categories", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 👈 Header に token を付与
+          },
+        });
         if (!res.ok) {
           setError("取得に失敗しました");
           return;
@@ -76,13 +90,14 @@ export default function FixAdminPost() {
       }
     };
     getCategories();
-  }, []);
+  }, [token]);
 
   const updateHandleSubmit = async (data: PostRequestBody) => {
     try {
+      if (!token) return;
       const requestBody: PostRequestBody = {
         title: data.title,
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailImageKey: data.thumbnailImageKey,
         content: data.content,
         categories: data.categories, // ✅ そのまま使える
       };
@@ -90,6 +105,7 @@ export default function FixAdminPost() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
         },
         body: JSON.stringify(requestBody),
       });
@@ -107,8 +123,13 @@ export default function FixAdminPost() {
 
   const deleteHandleSubmit = async () => {
     try {
+      if (!token) return;
       const res = await fetch(`/api/admin/posts/${id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
       });
       if (!res.ok) {
         setError("削除失敗しました");

@@ -61,8 +61,8 @@ export default function PostDetail() {
         height={116}
         width={157}
         src={
-          post.thumbnailUrl.startsWith("http")
-            ? post.thumbnailUrl
+          post.thumbnailImageKey.startsWith("http")
+            ? post.thumbnailImageKey
             : "https://placehold.co/157x116"
         }
         className="w-full h-auto object-cover mb-4"

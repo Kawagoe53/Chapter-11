@@ -1,8 +1,18 @@
 import { prisma } from "@/app/_libs/prisma";
-import { NextResponse } from "next/server";
-import { CreatePostRequestBody, PostIndexResponse } from "@/app/_types/Posts";
+import { NextRequest, NextResponse } from "next/server";
+import { PostRequestBody, PostIndexResponse } from "@/app/_types/Posts";
+import { supabase } from "@/app/_libs/supabase";
 
-export const GET = async () => {
+export const GET = async (request: NextRequest) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     const posts = await prisma.post.findMany({
       include: {
@@ -40,32 +50,41 @@ export type CreatePostResponse = {
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
 export const POST = async (request: Request) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     // リクエストのbodyを取得
-    const body: CreatePostRequestBody = await request.json();
+    const body: PostRequestBody = await request.json();
 
     // bodyの中からtitle, content, categories, thumbnailUrlを取り出す
-    const { title, content, categories, thumbnailUrl } = body;
+    const { title, content, categories, thumbnailImageKey } = body;
 
     // 投稿をDBに生成
     const data = await prisma.post.create({
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     });
 
     // 記事とカテゴリーの中間テーブルのレコードをDBに生成
-    // 本来複数同時生成には、createManyというメソッドがあるが、sqliteではcreateManyが使えないので、for文1つずつ実施
-    for (const category of categories) {
-      await prisma.postCategory.create({
-        data: {
-          categoryId: category.id,
-          postId: data.id,
-        },
-      });
-    }
+    // 複数同時生成には、createManyというメソッド
+    //categoryは配列なのでmapを使う
+
+    await prisma.postCategory.createMany({
+      data: categories.map((category) => ({
+        categoryId: category.id,
+        postId: data.id,
+      })),
+    });
 
     // レスポンスを返す
     return NextResponse.json<CreatePostResponse>({

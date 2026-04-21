@@ -10,13 +10,16 @@ import { useState } from "react";
 import { CategoryRequestBody } from "@/app/_types/Posts";
 import { useRouter } from "next/navigation";
 import { Form } from "../_components/Form";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function CreateNewCategory() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const onSubmit = async (data: CategoryRequestBody) => {
     try {
+      if (!token) return;
       const requestBody: CategoryRequestBody = {
         name: data.name,
       };
@@ -24,6 +27,7 @@ export default function CreateNewCategory() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
         },
         body: JSON.stringify(requestBody),
       });

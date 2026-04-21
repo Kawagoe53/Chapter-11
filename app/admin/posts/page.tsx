@@ -5,16 +5,24 @@ import { Post, PostIndexResponse } from "@/app/_types/Posts";
 import Link from "next/link";
 import { formatDate } from "@/app/_utils/formatDate";
 import Image from "next/image";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function AdminPosts() {
   const [adminPosts, setAdminPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { token } = useSupabaseSession(); //👈tokenをインポート
 
   useEffect(() => {
     const fetcher = async () => {
+      if (!token) return; //👈
       try {
-        const res = await fetch("/api/admin/posts");
+        const res = await fetch("/api/admin/posts", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 👈 Header に token を付与
+          },
+        });
         const data: PostIndexResponse = await res.json();
         setAdminPosts(data.posts);
       } catch (e) {
@@ -25,7 +33,7 @@ export default function AdminPosts() {
       }
     };
     fetcher();
-  }, []);
+  }, [token]);
 
   if (isLoading) {
     return (
@@ -67,8 +75,8 @@ export default function AdminPosts() {
             height={116}
             width={157}
             src={
-              post.thumbnailUrl.startsWith("https")
-                ? post.thumbnailUrl
+              post.thumbnailImageKey.startsWith("https")
+                ? post.thumbnailImageKey
                 : "https://placehold.co/157x116"
             }
             className="w-fit h-30 shrink-0 object-cover m-3"

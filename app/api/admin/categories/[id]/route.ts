@@ -1,15 +1,22 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  UpdateCategoryRequestBody,
-  CategoryShowResponse,
-} from "@/app/_types/Posts";
+import { CategoryShowResponse, CategoryRequestBody } from "@/app/_types/Posts";
+import { supabase } from "@/app/_libs/supabase";
 
 export const GET = async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     const category = await prisma.category.findUnique({
       where: {
@@ -42,7 +49,16 @@ export const PUT = async (
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
-  const { name }: UpdateCategoryRequestBody = await request.json();
+  const { name }: CategoryRequestBody = await request.json();
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
 
   try {
     await prisma.category.update({
@@ -64,10 +80,19 @@ export const PUT = async (
 //↓↓↓記事削除↓↓↓
 
 export const DELETE = async (
-  _request: NextRequest, //idだけあれば削除できるので”_”をつけている
+  request: NextRequest, //idだけあれば削除できるので”_”をつけている
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 401 });
   try {
     await prisma.category.delete({
       where: {

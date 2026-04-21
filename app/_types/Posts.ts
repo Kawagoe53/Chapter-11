@@ -2,7 +2,7 @@ export type Post = {
   id: number;
   title: string;
   content: string;
-  thumbnailUrl: string;
+  thumbnailImageKey: string;
   createdAt: Date;
   updatedAt: Date;
   postCategories: {
@@ -34,7 +34,7 @@ export type PostRequestBody = {
   title: string;
   content: string;
   categories: { id: number }[];
-  thumbnailUrl: string;
+  thumbnailImageKey: string;
 };
 
 export type CreatePostResponse = {
@@ -46,7 +46,7 @@ export type PostIndexResponse = {
     id: number;
     title: string;
     content: string;
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
     createdAt: Date;
     updatedAt: Date;
     postCategories: {
@@ -69,4 +69,9 @@ export type CategoryShowResponse = {
     createdAt: Date;
     updatedAt: Date;
   };
+};
+
+export type LoginForm = {
+  email: string;
+  password: string;
 };
